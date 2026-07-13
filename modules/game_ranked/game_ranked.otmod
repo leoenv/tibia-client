@@ -1,0 +1,11 @@
+Module
+  name: game_ranked
+  description: Ranked PvP - filas 1v1/2v2/5v5, MMR e leaderboard
+  author: leoenv
+  sandboxed: true
+  scripts: [ ranked ]
+  dependencies:
+    - game_interface
+    - client_topmenu
+  @onLoad: init()
+  @onUnload: terminate()

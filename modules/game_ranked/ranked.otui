@@ -1,0 +1,111 @@
+RankedModeRow < UIWidget
+  height: 46
+  anchors.left: parent.left
+  anchors.right: parent.right
+  margin-top: 4
+
+  Label
+    id: title
+    anchors.top: parent.top
+    anchors.left: parent.left
+    text-auto-resize: true
+    font: verdana-11px-rounded
+
+  Label
+    id: info
+    anchors.top: title.bottom
+    anchors.left: parent.left
+    margin-top: 2
+    text-auto-resize: true
+
+  Button
+    id: queueBtn
+    anchors.top: parent.top
+    anchors.right: parent.right
+    width: 90
+    height: 40
+
+
+MainWindow
+  id: rankedWindow
+  !text: tr('Ranked PvP')
+  size: 380 560
+  visible: false
+  @onEscape: modules.game_ranked.hide()
+
+  Label
+    id: header
+    !text: tr('Escolha um modo e entre na fila:')
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    text-align: center
+
+  RankedModeRow
+    id: row_1v1
+    anchors.top: header.bottom
+    margin-top: 6
+
+  RankedModeRow
+    id: row_2v2
+    anchors.top: row_1v1.bottom
+
+  RankedModeRow
+    id: row_5v5
+    anchors.top: row_2v2.bottom
+
+  Label
+    id: statusLabel
+    anchors.top: row_5v5.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 6
+    text-align: center
+    text-auto-resize: true
+
+  HorizontalSeparator
+    id: sep
+    anchors.top: statusLabel.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 6
+
+  Label
+    id: lbTitle
+    !text: tr('Leaderboard:')
+    anchors.top: sep.bottom
+    anchors.left: parent.left
+    margin-top: 6
+
+  ComboBox
+    id: lbMode
+    anchors.top: sep.bottom
+    anchors.right: parent.right
+    width: 90
+
+  TextList
+    id: lbList
+    anchors.top: lbTitle.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 200
+    margin-top: 4
+    padding: 1
+    vertical-scrollbar: lbScroll
+    focusable: false
+
+  VerticalScrollBar
+    id: lbScroll
+    anchors.top: lbList.top
+    anchors.bottom: lbList.bottom
+    anchors.right: lbList.right
+    step: 14
+    pixels-scroll: true
+
+  Button
+    id: closeButton
+    !text: tr('Close')
+    anchors.bottom: parent.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+    width: 80
+    @onClick: modules.game_ranked.hide()

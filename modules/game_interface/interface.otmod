@@ -31,5 +31,8 @@ Module
     - game_cooldown
     - game_modaldialog
     - game_unjustifiedpoints
+    - game_taskmanager
+    - game_upgradeitem
+    - game_ranked
   @onLoad: init()
   @onUnload: terminate()

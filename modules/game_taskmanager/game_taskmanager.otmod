@@ -1,0 +1,11 @@
+Module
+  name: game_taskmanager
+  description: Task Manager - escolher tasks de monstros pela UI
+  author: leoenv
+  sandboxed: true
+  scripts: [ taskmanager ]
+  dependencies:
+    - game_interface
+    - client_topmenu
+  @onLoad: init()
+  @onUnload: terminate()

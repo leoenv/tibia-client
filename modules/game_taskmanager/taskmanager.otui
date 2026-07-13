@@ -1,0 +1,128 @@
+MonsterRow < Label
+  height: 18
+  focusable: true
+  text-align: left
+  &monsterIndex: 0
+  background-color: alpha
+  $focus:
+    background-color: #ffffff22
+  $hover !focus:
+    background-color: #ffffff11
+
+MainWindow
+  id: taskManagerWindow
+  !text: tr('Task Manager')
+  size: 430 540
+  visible: false
+  @onEscape: modules.game_taskmanager.hide()
+
+  Label
+    id: searchLabel
+    !text: tr('Search monster:')
+    anchors.top: parent.top
+    anchors.left: parent.left
+
+  TextEdit
+    id: searchEdit
+    anchors.top: searchLabel.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 2
+
+  TextList
+    id: monsterList
+    anchors.top: searchEdit.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 190
+    margin-top: 6
+    padding: 1
+    vertical-scrollbar: monsterScroll
+    focusable: false
+
+  VerticalScrollBar
+    id: monsterScroll
+    anchors.top: monsterList.top
+    anchors.bottom: monsterList.bottom
+    anchors.right: monsterList.right
+    step: 18
+    pixels-scroll: true
+
+  Label
+    id: quantityLabel
+    !text: tr('Quantity: 100')
+    anchors.top: monsterList.bottom
+    anchors.left: parent.left
+    margin-top: 10
+
+  HorizontalScrollBar
+    id: quantityScroll
+    anchors.top: quantityLabel.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 2
+    minimum: 1
+    maximum: 10
+    value: 1
+    step: 1
+
+  Label
+    id: rewardLabel
+    !text: tr('Select a monster above')
+    anchors.top: quantityScroll.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 10
+    text-align: center
+    text-auto-resize: true
+
+  Button
+    id: startButton
+    !text: tr('Start Task')
+    anchors.top: rewardLabel.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 10
+    @onClick: modules.game_taskmanager.startTask()
+
+  HorizontalSeparator
+    anchors.top: startButton.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 12
+
+  Label
+    id: activeLabel
+    !text: tr('No active task')
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 8
+    text-align: center
+    text-auto-resize: true
+
+  ProgressBar
+    id: progressBar
+    anchors.top: activeLabel.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 4
+    height: 16
+
+  Button
+    id: cancelButton
+    !text: tr('Cancel Task')
+    anchors.top: progressBar.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 8
+    @onClick: modules.game_taskmanager.cancelTask()
+
+  Button
+    id: closeButton
+    !text: tr('Close')
+    anchors.bottom: parent.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+    width: 80
+    margin-top: 8
+    @onClick: modules.game_taskmanager.hide()

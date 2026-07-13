@@ -38,7 +38,7 @@ jobs:
             cc: cl.exe
             triplet: x64-windows
             packages: >
-              boost-iostreams boost-asio boost-system boost-variant boost-lockfree boost-filesystem boost-uuid
+              boost-iostreams boost-asio boost-system boost-variant boost-lockfree boost-filesystem boost-uuid boost-thread
               glew luajit libogg libvorbis openal-soft opengl openssl physfs zlib
 
     steps:
@@ -64,8 +64,13 @@ jobs:
 
       - name: CMake configure & build (Ninja + MSVC)
         shell: pwsh
+        env:
+          # CMake 4 removeu suporte a cmake_minimum_required < 3.5 (OTClient pede 2.6/3.x antigo).
+          # Passar via env var evita bug de parsing do "-DCMAKE_POLICY_VERSION_MINIMUM=3.5" na
+          # linha de comando do Windows (o "3.5" era cortado em "3" + ".5", ver run #3).
+          CMAKE_POLICY_VERSION_MINIMUM: "3.5"
         run: |
-          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} -DLUAJIT=ON
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} -DLUAJIT=ON
           cmake --build build --parallel
 
       - name: dir

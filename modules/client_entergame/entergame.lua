@@ -119,7 +119,7 @@ function EnterGame.init()
   local stayLogged = g_settings.getBoolean('staylogged')
   local autologin = g_settings.getBoolean('autologin')
   local clientVersion = g_settings.getInteger('client-version')
-  if clientVersion == 0 then clientVersion = 772 end
+  if clientVersion == 0 then clientVersion = 860 end
 
   if port == nil or port == 0 then port = 7171 end
   if host == nil or host == '' then host = '127.0.0.1' end

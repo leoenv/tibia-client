@@ -97,26 +97,25 @@ void Connection::connect(const std::string& host, uint16 port, const std::functi
     m_error.clear();
     m_connectCallback = connectCallback;
 
-    asio::ip::tcp::resolver::query query(host, stdext::unsafe_cast<std::string>(port));
-    m_resolver.async_resolve(query, [connection = asConnection()] (auto error, auto iterator) {
-        connection->onResolve(error, iterator);
+    m_resolver.async_resolve(host, stdext::unsafe_cast<std::string>(port), [connection = asConnection()] (auto error, auto endpoints) {
+        connection->onResolve(error, endpoints);
     });
 
     m_readTimer.cancel();
-    m_readTimer.expires_from_now(boost::posix_time::seconds(static_cast<uint32>(READ_TIMEOUT)));
+    m_readTimer.expires_after(std::chrono::seconds(static_cast<uint32>(READ_TIMEOUT)));
     m_readTimer.async_wait([connection = asConnection()] (auto error) {
         connection->onTimeout(error);
     });
 }
 
-void Connection::internal_connect(asio::ip::basic_resolver<asio::ip::tcp>::iterator endpointIterator)
+void Connection::internal_connect(const asio::ip::tcp::resolver::results_type& endpoints)
 {
-    m_socket.async_connect(*endpointIterator, [connection = asConnection()] (auto error) {
+    asio::async_connect(m_socket, endpoints, [connection = asConnection()] (auto error, auto /*endpoint*/) {
         connection->onConnect(error);
     });
 
     m_readTimer.cancel();
-    m_readTimer.expires_from_now(boost::posix_time::seconds(static_cast<uint32>(READ_TIMEOUT)));
+    m_readTimer.expires_after(std::chrono::seconds(static_cast<uint32>(READ_TIMEOUT)));
     m_readTimer.async_wait([connection = asConnection()] (auto error) {
         connection->onTimeout(error);
     });
@@ -136,7 +135,7 @@ void Connection::write(uint8* buffer, size_t size)
             m_outputStream = std::make_shared<asio::streambuf>();
 
         m_delayedWriteTimer.cancel();
-        m_delayedWriteTimer.expires_from_now(boost::posix_time::milliseconds(0));
+        m_delayedWriteTimer.expires_after(std::chrono::milliseconds(0));
         m_delayedWriteTimer.async_wait([connection = asConnection()] (auto error) {
             connection->onCanWrite(error);
         });
@@ -160,7 +159,7 @@ void Connection::internal_write()
     });
 
     m_writeTimer.cancel();
-    m_writeTimer.expires_from_now(boost::posix_time::seconds(static_cast<uint32>(WRITE_TIMEOUT)));
+    m_writeTimer.expires_after(std::chrono::seconds(static_cast<uint32>(WRITE_TIMEOUT)));
     m_writeTimer.async_wait([connection = asConnection()] (auto error) {
         connection->onTimeout(error);
     });
@@ -178,7 +177,7 @@ void Connection::read(uint16 bytes, const RecvCallback& callback)
     });
 
     m_readTimer.cancel();
-    m_readTimer.expires_from_now(boost::posix_time::seconds(static_cast<uint32>(READ_TIMEOUT)));
+    m_readTimer.expires_after(std::chrono::seconds(static_cast<uint32>(READ_TIMEOUT)));
     m_readTimer.async_wait([connection = asConnection()] (auto error) {
         connection->onTimeout(error);
     });
@@ -196,7 +195,7 @@ void Connection::read_until(const std::string& what, const RecvCallback& callbac
     });
 
     m_readTimer.cancel();
-    m_readTimer.expires_from_now(boost::posix_time::seconds(static_cast<uint32>(READ_TIMEOUT)));
+    m_readTimer.expires_after(std::chrono::seconds(static_cast<uint32>(READ_TIMEOUT)));
     m_readTimer.async_wait([connection = asConnection()] (auto error) {
         connection->onTimeout(error);
     });
@@ -214,13 +213,13 @@ void Connection::read_some(const RecvCallback& callback)
     });
 
     m_readTimer.cancel();
-    m_readTimer.expires_from_now(boost::posix_time::seconds(static_cast<uint32>(READ_TIMEOUT)));
+    m_readTimer.expires_after(std::chrono::seconds(static_cast<uint32>(READ_TIMEOUT)));
     m_readTimer.async_wait([connection = asConnection()] (auto error) {
         connection->onTimeout(error);
     });
 }
 
-void Connection::onResolve(const boost::system::error_code& error, asio::ip::basic_resolver<asio::ip::tcp>::iterator endpointIterator)
+void Connection::onResolve(const boost::system::error_code& error, const asio::ip::tcp::resolver::results_type& endpoints)
 {
     m_readTimer.cancel();
 
@@ -228,7 +227,7 @@ void Connection::onResolve(const boost::system::error_code& error, asio::ip::bas
         return;
 
     if(!error)
-        internal_connect(endpointIterator);
+        internal_connect(endpoints);
     else
         handleError(error);
 }
@@ -329,7 +328,7 @@ int Connection::getIp()
     boost::system::error_code error;
     const boost::asio::ip::tcp::endpoint ip = m_socket.remote_endpoint(error);
     if(!error)
-        return boost::asio::detail::socket_ops::host_to_network_long(ip.address().to_v4().to_ulong());
+        return boost::asio::detail::socket_ops::host_to_network_long(ip.address().to_v4().to_uint());
 
     g_logger.error("Getting remote ip");
     return 0;

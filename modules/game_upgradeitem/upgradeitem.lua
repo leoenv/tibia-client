@@ -11,7 +11,7 @@ upgradeWindow = nil
 upgradeButton = nil
 local currentSlot = nil
 
-local TIER_NAMES = { [1] = "Common", [2] = "Uncommon", [3] = "Rare", [4] = "Epic", [5] = "Mythic", [6] = "Legendary" }
+local TIER_NAMES = { [1] = "Common", [2] = "Uncommon", [3] = "Rare", [4] = "Epic", [5] = "Legendary", [6] = "Mythic" }
 
 -- slots de equipamento (texto -> numero do slot, igual ao servidor)
 local SLOTS = {

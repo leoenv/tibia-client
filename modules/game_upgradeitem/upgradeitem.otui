@@ -1,7 +1,7 @@
 MainWindow
   id: upgradeWindow
   !text: tr('Upgrade Item')
-  size: 390 480
+  size: 400 640
   visible: false
   @onEscape: modules.game_upgradeitem.hide()
 
@@ -108,6 +108,55 @@ MainWindow
     anchors.right: parent.right
     margin-top: 3
     @onClick: modules.game_upgradeitem.applyOrb('ancient')
+
+  Label
+    id: specialTitle
+    !text: tr('-- Special Orbs --')
+    anchors.top: orb_ancient.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 6
+    text-align: center
+
+  Button
+    id: orb_special_fate
+    anchors.top: specialTitle.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 3
+    @onClick: modules.game_upgradeitem.applyOrb('special_fate')
+
+  Button
+    id: orb_shuffle
+    anchors.top: orb_special_fate.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 3
+    @onClick: modules.game_upgradeitem.applyOrb('shuffle')
+
+  Button
+    id: orb_special_cleaner
+    anchors.top: orb_shuffle.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 3
+    @onClick: modules.game_upgradeitem.applyOrb('special_cleaner')
+
+  Button
+    id: orb_special_upgrade
+    anchors.top: orb_special_cleaner.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 3
+    @onClick: modules.game_upgradeitem.applyOrb('special_upgrade')
+
+  Button
+    id: orb_special_ancient
+    anchors.top: orb_special_upgrade.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 3
+    @onClick: modules.game_upgradeitem.applyOrb('special_ancient')
 
   Button
     id: closeButton

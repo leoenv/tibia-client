@@ -1,0 +1,11 @@
+Module
+  name: game_upgradeitem
+  description: Upgrade Item - aplicar Orbs na raridade pela UI
+  author: leoenv
+  sandboxed: true
+  scripts: [ upgradeitem ]
+  dependencies:
+    - game_interface
+    - client_topmenu
+  @onLoad: init()
+  @onUnload: terminate()

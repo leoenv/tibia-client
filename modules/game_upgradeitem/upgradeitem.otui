@@ -1,0 +1,118 @@
+MainWindow
+  id: upgradeWindow
+  !text: tr('Upgrade Item')
+  size: 390 480
+  visible: false
+  @onEscape: modules.game_upgradeitem.hide()
+
+  Label
+    id: slotTitle
+    !text: tr('Equipment slot:')
+    anchors.top: parent.top
+    anchors.left: parent.left
+
+  ComboBox
+    id: slotBox
+    anchors.top: slotTitle.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 2
+
+  Label
+    id: itemName
+    !text: tr('Select a slot above')
+    anchors.top: slotBox.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 8
+    text-align: center
+    text-auto-resize: true
+
+  Label
+    id: itemTier
+    anchors.top: itemName.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    text-align: center
+    text-auto-resize: true
+
+  TextList
+    id: attrList
+    anchors.top: itemTier.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 95
+    margin-top: 6
+    padding: 1
+    vertical-scrollbar: attrScroll
+    focusable: false
+
+  VerticalScrollBar
+    id: attrScroll
+    anchors.top: attrList.top
+    anchors.bottom: attrList.bottom
+    anchors.right: attrList.right
+    step: 14
+    pixels-scroll: true
+
+  HorizontalSeparator
+    id: sep
+    anchors.top: attrList.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 8
+
+  Label
+    id: orbsTitle
+    !text: tr('Orbs (click to apply):')
+    anchors.top: sep.bottom
+    anchors.left: parent.left
+    margin-top: 6
+
+  Button
+    id: orb_enchant
+    anchors.top: orbsTitle.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 4
+    @onClick: modules.game_upgradeitem.applyOrb('enchant')
+
+  Button
+    id: orb_cleaner
+    anchors.top: orb_enchant.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 3
+    @onClick: modules.game_upgradeitem.applyOrb('cleaner')
+
+  Button
+    id: orb_fate
+    anchors.top: orb_cleaner.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 3
+    @onClick: modules.game_upgradeitem.applyOrb('fate')
+
+  Button
+    id: orb_upgrade
+    anchors.top: orb_fate.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 3
+    @onClick: modules.game_upgradeitem.applyOrb('upgrade')
+
+  Button
+    id: orb_ancient
+    anchors.top: orb_upgrade.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 3
+    @onClick: modules.game_upgradeitem.applyOrb('ancient')
+
+  Button
+    id: closeButton
+    !text: tr('Close')
+    anchors.bottom: parent.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+    width: 80
+    @onClick: modules.game_upgradeitem.hide()

@@ -1561,6 +1561,12 @@ void Game::setClientVersion(int version)
 
     if(version >= 860) {
         enableFeature(Otc::GameAttackSeq);
+        // Datapack Brunowots (protocolo 860) usa .dat/.spr "extended": mais de
+        // 65536 sprites, logo os IDs de sprite e o header do .spr sao U32 e nao
+        // U16. Sem esta flag o parser de .dat desincroniza (corrupt data id 1665)
+        // e o .spr le contagem errada. Comprovado por parse byte-a-byte do
+        // Tibia.dat: com U32 as 4 categorias fecham exatamente no fim do arquivo.
+        enableFeature(Otc::GameSpritesU32);
     }
 
     if(version >= 862) {

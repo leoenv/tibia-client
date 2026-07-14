@@ -32,6 +32,8 @@
 
 #define LUA_LIB
 
+#include <climits>
+
 extern "C" {
 #include <lua.h>
 #include <lauxlib.h>

@@ -22,6 +22,7 @@
 
 #include "inputmessage.h"
 #include <framework/util/crypt.h>
+#include <climits>
 
 InputMessage::InputMessage()
 {

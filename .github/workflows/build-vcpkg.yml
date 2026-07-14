@@ -38,7 +38,7 @@ jobs:
             cc: cl.exe
             triplet: x64-windows
             packages: >
-              boost-iostreams boost-asio boost-system boost-variant boost-lockfree boost-filesystem boost-uuid boost-thread
+              boost-iostreams boost-asio boost-system boost-variant boost-lockfree boost-filesystem boost-thread
               glew luajit libogg libvorbis openal-soft opengl openssl physfs zlib
 
     steps:

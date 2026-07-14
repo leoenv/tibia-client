@@ -27,10 +27,10 @@
 #include <framework/platform/platform.h>
 #include <framework/core/application.h>
 
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
-
-#include <boost/functional/hash.hpp>
+#include <random>
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
 
 #ifndef USE_GMP
 #include <openssl/rsa.h>
@@ -170,9 +170,30 @@ std::string Crypt::xorCrypt(const std::string& buffer, const std::string& key)
 
 std::string Crypt::genUUID()
 {
-    boost::uuids::random_generator gen;
-    boost::uuids::uuid u = gen();
-    return boost::uuids::to_string(u);
+    // Boost 1.91's boost::uuid random_generator (time_generator_v*/chacha20)
+    // falha ao compilar no MSVC (erros de sintaxe em cascata nos headers).
+    // Como o UUID aqui e apenas um identificador aleatorio generico (sem
+    // validacao externa de formato/versao), geramos manualmente via <random>
+    // no formato RFC4122 v4 padrao (xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx).
+    static thread_local std::mt19937_64 rng{ std::random_device{}() };
+    std::uniform_int_distribution<uint64_t> dist;
+
+    uint64_t hi = dist(rng);
+    uint64_t lo = dist(rng);
+
+    // seta os bits de versao (4) e variante (RFC4122) exigidos pelo formato
+    hi = (hi & 0xFFFFFFFFFFFF0FFFULL) | 0x0000000000004000ULL;
+    lo = (lo & 0x3FFFFFFFFFFFFFFFULL) | 0x8000000000000000ULL;
+
+    char buf[37];
+    snprintf(buf, sizeof(buf),
+        "%08x-%04x-%04x-%04x-%012llx",
+        (unsigned)(hi >> 32),
+        (unsigned)((hi >> 16) & 0xFFFF),
+        (unsigned)(hi & 0xFFFF),
+        (unsigned)(lo >> 48),
+        (unsigned long long)(lo & 0xFFFFFFFFFFFFULL));
+    return std::string(buf);
 }
 
 bool Crypt::setMachineUUID(std::string uuidstr)
@@ -188,26 +209,40 @@ bool Crypt::setMachineUUID(std::string uuidstr)
 
 std::string Crypt::getMachineUUID()
 {
-    if(m_machineUUID.is_nil()) {
-        boost::uuids::random_generator gen;
-        m_machineUUID = gen();
+    bool isNil = true;
+    for(uint8_t b : m_machineUUID) {
+        if(b != 0) { isNil = false; break; }
+    }
+    if(isNil) {
+        static thread_local std::mt19937_64 rng{ std::random_device{}() };
+        std::uniform_int_distribution<uint32_t> dist;
+        for(size_t i = 0; i < m_machineUUID.size(); i += 4) {
+            uint32_t r = dist(rng);
+            memcpy(&m_machineUUID[i], &r, std::min<size_t>(4, m_machineUUID.size() - i));
+        }
     }
     return _encrypt(std::string(m_machineUUID.begin(), m_machineUUID.end()), false);
 }
 
+// Substitui boost::uuids::name_generator (SHA1-based, RFC4122 v5): nao ha
+// validacao externa dessa chave, entao usamos um hash deterministico simples
+// (FNV-1a) misturando o "namespace" (machine uuid ou zeros) com o nome.
 std::string Crypt::getCryptKey(bool useMachineUUID)
 {
-    boost::hash<boost::uuids::uuid> uuid_hasher;
-    boost::uuids::uuid uuid;
+    std::string seed;
     if(useMachineUUID) {
-        uuid = m_machineUUID;
+        seed.assign((const char*)m_machineUUID.data(), m_machineUUID.size());
     } else {
-        boost::uuids::nil_generator nilgen;
-        uuid = nilgen();
+        seed.assign(16, '\0');
     }
-    boost::uuids::name_generator namegen(uuid);
-    boost::uuids::uuid u = namegen(g_app.getCompactName() + g_platform.getCPUName() + g_platform.getOSName() + g_resources.getUserDir());
-    std::size_t hash = uuid_hasher(u);
+    seed += g_app.getCompactName() + g_platform.getCPUName() + g_platform.getOSName() + g_resources.getUserDir();
+
+    uint64_t hash = 14695981039346656037ULL; // FNV-1a offset basis
+    for(unsigned char c : seed) {
+        hash ^= c;
+        hash *= 1099511628211ULL; // FNV-1a prime
+    }
+
     std::string key;
     key.assign((const char *)&hash, sizeof(hash));
     return key;

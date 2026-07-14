@@ -28,7 +28,7 @@
 #include <boost/asio.hpp>
 #include <memory>
 
-asio::io_service g_ioService;
+asio::io_context g_ioService;
 std::list<std::shared_ptr<asio::streambuf>> Connection::m_outputStreams;
 
 Connection::Connection() :
@@ -53,7 +53,7 @@ Connection::~Connection()
 void Connection::poll()
 {
     // reset must always be called prior to poll
-    g_ioService.reset();
+    g_ioService.restart();
     g_ioService.poll();
 }
 
@@ -292,7 +292,7 @@ void Connection::onRecv(const boost::system::error_code& error, size_t recvSize)
     if(m_connected) {
         if(!error) {
             if(m_recvCallback) {
-                const char* header = boost::asio::buffer_cast<const char*>(m_inputStream.data());
+                const char* header = static_cast<const char*>(m_inputStream.data().data());
                 m_recvCallback((uint8*)header, recvSize);
             }
         } else

@@ -253,3 +253,10 @@ bh_unicode_properties.cache
 # Sublime-github package stores a github token in this file
 # https://packagecontrol.io/packages/sublime-github
 GitHub.sublime-settings
+# binarios locais
+otclient.exe
+*.dll
+build/
+build_local.txt
+_rebuild.bat
+_build_local.bat

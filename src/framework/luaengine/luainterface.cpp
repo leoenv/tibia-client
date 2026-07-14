@@ -84,6 +84,21 @@ void LuaInterface::registerSingletonClass(const std::string& className)
     pop();
 }
 
+// Finalizer __gc das instancias de classe (LuaObject). Precisa ler o userdata
+// direto do thread 'L' que o LuaJIT esta usando para finalizar -- NAO via a
+// maquina de callback/g_lua, que assume o thread principal. Sob o GC do LuaJIT
+// a finalizacao pode ocorrer em outro thread (ex.: newSandboxEnv), o que fazia
+// popUserdata() ler pilha vazia (gettop 0) e abortar no assert / corromper heap.
+int LuaInterface::luaObjectCollectBare(lua_State* L)
+{
+    auto objPtr = static_cast<LuaObjectPtr*>(lua_touserdata(L, 1));
+    if(objPtr) {
+        objPtr->reset();
+        g_lua.m_totalObjRefs--;
+    }
+    return 0;
+}
+
 void LuaInterface::registerClass(const std::string& className, const std::string& baseClass)
 {
     // creates the class table (that it's also the class methods table)
@@ -111,7 +126,7 @@ void LuaInterface::registerClass(const std::string& className, const std::string
     setField("__newindex", klass_mt);
     pushCppFunction(&LuaInterface::luaObjectEqualEvent);
     setField("__eq", klass_mt);
-    pushCppFunction(&LuaInterface::luaObjectCollectEvent);
+    pushCFunction(&LuaInterface::luaObjectCollectBare);
     setField("__gc", klass_mt);
 
     // set some fields that will be used later in metatable
@@ -650,10 +665,15 @@ int LuaInterface::luaCppFunctionCallback(lua_State* L)
 
 int LuaInterface::luaCollectCppFunction(lua_State* L)
 {
-    auto funcPtr = static_cast<LuaCppFunctionPtr*>(g_lua.popUserdata());
-    assert(funcPtr);
-    funcPtr->reset();
-    g_lua.m_totalFuncRefs--;
+    // Finalizer __gc: le o userdata do thread 'L' que o LuaJIT passou, NAO de
+    // g_lua.L. O GC pode rodar num thread diferente do principal (ex.: durante
+    // newSandboxEnv), e ai g_lua.popUserdata() leria a pilha errada (gettop 0)
+    // -> assert/crash. O objeto finalizado e sempre o argumento 1.
+    auto funcPtr = static_cast<LuaCppFunctionPtr*>(lua_touserdata(L, 1));
+    if(funcPtr) {
+        funcPtr->reset();
+        g_lua.m_totalFuncRefs--;
+    }
     return 0;
 }
 
@@ -1126,6 +1146,14 @@ void LuaInterface::pushCFunction(LuaCFunction func, int n)
 
 void LuaInterface::pushCppFunction(const LuaCppFunction& func)
 {
+    // Para o GC incremental durante a construcao do wrapper. Sem isso, o passo
+    // de GC disparado por lua_createtable/lua_newtable (abaixo) pode rodar um
+    // finalizer __gc no meio da montagem -- com a pilha ainda desbalanceada --
+    // e chamar luaCppFunctionCallback sem o upvalue esperado (funcPtr nulo),
+    // abortando no assert (build debug) ou corrompendo o heap (release).
+    // Reproduzido no registro em massa de registerLuaFunctions com LuaJIT.
+    lua_gc(L, LUA_GCSTOP, 0);
+
     // create a pointer to func (this pointer will hold the function existence)
     new(newUserdata(sizeof(LuaCppFunctionPtr))) LuaCppFunctionPtr(new LuaCppFunction(func));
     m_totalFuncRefs++;
@@ -1138,6 +1166,8 @@ void LuaInterface::pushCppFunction(const LuaCppFunction& func)
 
     // actually pushes a C function callback that will call the cpp function
     pushCFunction(&LuaInterface::luaCppFunctionCallback, 1);
+
+    lua_gc(L, LUA_GCRESTART, 0);
 }
 
 void LuaInterface::pushValue(int index)

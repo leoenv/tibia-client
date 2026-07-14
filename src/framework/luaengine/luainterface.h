@@ -131,6 +131,10 @@ private:
     /// existence by lua until it got no references left
     static int luaObjectCollectEvent(LuaInterface* lua);
 
+    /// Finalizer __gc thread-correto para instancias de classe: le o userdata do
+    /// thread que o LuaJIT usa na finalizacao, sem depender de g_lua.L.
+    static int luaObjectCollectBare(lua_State* L);
+
 public:
     /// Loads and runs a script, any errors are printed to stdout and returns false
     bool safeRunScript(const std::string& fileName);

@@ -24,6 +24,9 @@
 #include "streamsoundsource.h"
 #include "soundmanager.h"
 
+#include <algorithm>
+#include <random>
+
 SoundSourcePtr SoundChannel::play(const std::string& filename, float fadetime, float gain)
 {
     if(!g_sounds.isAudioEnabled() || !m_enabled)
@@ -55,7 +58,9 @@ void SoundChannel::enqueue(const std::string& filename, float fadetime, float ga
     if(gain == 0)
         gain = 1.0f;
     m_queue.push_back(QueueEntry{g_sounds.resolveSoundFile(filename), fadetime, gain});
-    std::random_shuffle(m_queue.begin(), m_queue.end());
+    // std::random_shuffle foi removido no C++17 -> std::shuffle (C++11+) com gerador proprio
+    static thread_local std::mt19937 rng{ std::random_device{}() };
+    std::shuffle(m_queue.begin(), m_queue.end(), rng);
     //update();
 }
 

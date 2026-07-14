@@ -3,6 +3,18 @@ HOTKEY_MANAGER_USEONSELF = 1
 HOTKEY_MANAGER_USEONTARGET = 2
 HOTKEY_MANAGER_USEWITH = 3
 
+-- Regra 7.4: hotkeys nao devem usar runas nem pocoes instantaneamente (esse
+-- sistema de F-keys nao existia no 7.4; runa/pocao so podiam ser usadas
+-- manualmente, arrastando/segurando o item). Detecta pela categoria de market
+-- do proprio .dat (nao depende de lista de IDs).
+local function isHotkeyRestrictedItem(itemId)
+  local itemType = g_things.getItemType(itemId)
+  if not itemType then return false end
+  local marketData = itemType:getMarketData()
+  if not marketData then return false end
+  return marketData.category == MarketCategory.Potions or marketData.category == MarketCategory.Runes
+end
+
 HotkeyColors = {
   text = '#888888',
   textAutoSend = '#FFFFFF',
@@ -266,6 +278,11 @@ function onChooseItemMouseRelease(self, mousePosition, mouseButton)
     end
   end
 
+  if item and isHotkeyRestrictedItem(item:getId()) then
+    displayGameMessage('Runes and potions cannot be bound to hotkeys.')
+    item = nil
+  end
+
   if item and currentHotkeyLabel then
     currentHotkeyLabel.itemId = item:getId()
     if item:isFluidContainer() then
@@ -380,6 +397,11 @@ function doKeyCombo(keyCombo)
     return
   end
   lastHotkeyTime = g_clock.millis()
+
+  if hotKey.itemId and isHotkeyRestrictedItem(hotKey.itemId) then
+    displayGameMessage('Runes and potions cannot be used through hotkeys.')
+    return
+  end
 
   if hotKey.itemId == nil then
     if not hotKey.value or #hotKey.value == 0 then return end
